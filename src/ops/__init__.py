@@ -6,6 +6,7 @@ from src.ops.mla_prolog import OpMlaProlog
 from src.ops.communication import Dispatch, Combine
 from src.ops.rotary import OpRotary
 from src.ops.norm import OpNorm
+from src.ops.gdn import OpGDNLinear
 
 __all__ = [
     "BaseOp",
@@ -19,6 +20,7 @@ __all__ = [
     "OpMlaProlog",
     "Dispatch",
     "Combine",
-    "OpRotary"
-    "OpNorm"
+    "OpRotary",
+    "OpNorm",
+    "OpGDNLinear",
 ]

@@ -8,6 +8,7 @@ including architectural parameters, file paths, and model-specific settings.
 The module supports multiple model families:
 - DeepSeek V3
 - Qwen3-235B-A22B
+- Qwen3.5-397B-A17B
 
 Key features:
 - Enum-based model type definitions for type safety
@@ -38,6 +39,7 @@ class ModelType(Enum):
     DEEPSEEK_V3 = "deepseek-ai/DeepSeek-V3"
     QWEN3_235B = "Qwen/Qwen3-235B-A22B"
     DEEPSEEK_V2_LITE = "deepseek-ai/DeepSeek-V2-Lite"
+    QWEN3_5_397B = "Qwen/Qwen3.5-397B-A17B"
 
 
 @dataclass
@@ -110,6 +112,11 @@ class ModelConfig:
     qk_nope_head_dim: int = 0
     qk_rope_head_dim: int = 0
     v_head_dim: int = 0
+    linear_num_key_heads: int = 0
+    linear_key_head_dim: int = 0
+    linear_num_value_heads: int = 0
+    linear_value_head_dim: int = 0
+    full_attention_interval: int = 1
 
     @classmethod
     def create_model_config(cls, model_type: ModelType) -> 'ModelConfig':
@@ -145,6 +152,14 @@ class ModelConfig:
                 num_attention_heads=16, num_experts_per_tok=6, num_layers=27, num_moe_layers=26,
                 num_key_value_heads=16, q_lora_rank=0, qk_nope_head_dim=128,
                 qk_rope_head_dim=64, v_head_dim=128, vocab_size=102400),
+            ModelType.QWEN3_5_397B: cfg(
+                model_size_b=397, hidden_size=4096, max_kv_length=262144, intermediate_size=0,
+                max_position_embeddings=262144, moe_intermediate_size=1024, n_routed_experts=512,
+                n_shared_experts=0, num_heads=32, kv_heads=2, num_experts_per_tok=10,
+                num_layers=60, num_moe_layers=60, head_size=128, vocab_size=248320,
+                linear_num_key_heads=16, linear_key_head_dim=128,
+                linear_num_value_heads=64, linear_value_head_dim=128,
+                full_attention_interval=4)
         }
 
         try:
