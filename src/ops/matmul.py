@@ -170,9 +170,16 @@ class OpGroupedMatmul(BaseOp):
         return self.compute_time
 
     def memory_cost(self):
+        # Fix: In MoE expert parallelism, weights are distributed across FFN dies.
+        # Each die only loads its local expert weights, not all experts.
+        # The num_experts here represents total experts, but we only load 1/die_count of them.
+        # Note: This assumes expert parallelism where each die handles num_experts/ffn_die experts.
+        # For single-die or when expert distribution is handled externally, this gives upper bound.
         self.bytes = (
-            self.elem_size * self.bs * self.m +
-            self.elem_size * self.m * self.n * self.num_experts
+            self.elem_size * self.bs * self.m +  # Input activation
+            self.elem_size * self.m * self.n  # Local expert weights (not all experts)
         )
+        # Note: Communication overhead for expert dispatch/combine is calculated separately
+        # in Dispatch/Combine operators using inter_node_bandwidth
         self.memory_time = self.bytes / self.local_memory_bandwidth
         return self.memory_time

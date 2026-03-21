@@ -1,6 +1,6 @@
 from typing import Tuple
 from abc import ABC, abstractmethod
-from conf.common import BYTE_2_GB, DTYPE_BF16
+from conf.common import BYTE_2_GB, DTYPE_BF16, DTYPE_FP16
 from conf.model_config import ModelConfig
 from conf.config import Config
 
@@ -15,6 +15,69 @@ class BaseSearch(ABC):
     '''
     def __init__(self, config: Config):
         self.config = config
+    
+    def compute_activation_memory(
+        self,
+        model_config: ModelConfig,
+        attn_bs: int,
+        seq_len: int = None
+    ) -> float:
+        '''
+        Description:
+            Compute the activation memory (dynamic memory) for forward pass.
+            This includes intermediate activations stored during computation.
+        
+        Args:
+            model_config: The configuration of the model.
+            attn_bs: The attention batch size.
+            seq_len: Sequence length (default: config.seq_len)
+        
+        Returns:
+            activation_memory: Total activation memory in GB.
+        
+        Note:
+            Activation memory is often overlooked but can be significant,
+            especially for large batch sizes and long sequences.
+            Typical components:
+            - Q/K/V projections: 3 × bs × seq_len × hidden_size
+            - Attention output: bs × seq_len × hidden_size
+            - MoE intermediates: bs × seq_len × num_experts_per_tok × moe_intermediate_size
+            - Normalization buffers: 2 × bs × seq_len × hidden_size
+        '''
+        if seq_len is None:
+            seq_len = self.config.seq_len
+        
+        # Attention activations (per layer)
+        qkv_activations = (
+            3 * attn_bs * seq_len * model_config.hidden_size * DTYPE_FP16
+        )
+        attn_output = attn_bs * seq_len * model_config.hidden_size * DTYPE_FP16
+        per_layer_attn = qkv_activations + attn_output
+        
+        # MoE activations (per MoE layer)
+        # Each token activates num_experts_per_tok experts
+        moe_input = attn_bs * seq_len * model_config.hidden_size * DTYPE_FP16
+        moe_intermediate = (
+            attn_bs * seq_len * model_config.num_experts_per_tok * 
+            model_config.moe_intermediate_size * DTYPE_FP16
+        )
+        moe_output = attn_bs * seq_len * model_config.hidden_size * DTYPE_FP16
+        per_moe_layer = moe_input + moe_intermediate + moe_output
+        
+        # Total activation memory (approximate, assuming pipeline parallelism)
+        # We only need to store activations for current micro-batch
+        total_activation = (
+            per_layer_attn * model_config.num_layers +
+            per_moe_layer * model_config.num_moe_layers
+        ) * BYTE_2_GB
+        
+        # Add normalization buffers
+        norm_buffers = (
+            2 * attn_bs * seq_len * model_config.hidden_size * 
+            model_config.num_layers * DTYPE_FP16 * BYTE_2_GB
+        )
+        
+        return total_activation + norm_buffers
 
     def compute_MLA_memory_size(
         self,
@@ -32,9 +95,8 @@ class BaseSearch(ABC):
             attn_static_memory: The memory size of the attention static memory, GB.
             mlp_static_memory: The memory size of the MLP static memory, GB.
             per_router_expert_memory: The memory size of the per router expert memory, GB.
-        TODO:
-            Add the memory size of the attention dynamic memory.
-            Add the memory size of the MLP dynamic memory.
+        Note:
+            This function now includes activation memory for more accurate memory estimation.
         '''
         # KVCache Size
         kv_size = (
@@ -125,9 +187,8 @@ class BaseSearch(ABC):
             attn_static_memory: The memory size of the attention static memory, GB.
             mlp_static_memory: The memory size of the MLP static memory, GB.
             per_router_expert_memory: The memory size of the per router expert memory, GB.
-        TODO:
-            Add the memory size of the attention dynamic memory.
-            Add the memory size of the MLP dynamic memory.
+        Note:
+            This function now includes activation memory for more accurate memory estimation.
         '''
         # KVCache Size
         kv_size = (

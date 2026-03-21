@@ -67,7 +67,18 @@ class AfdSearch(BaseSearch):
                 kv_size, attn_static_memory, _, _ = self.compute_MLA_memory_size(self.config.model_config, attn_bs)
             elif get_attention_family(self.config.model_type) == "GQA":
                 kv_size, attn_static_memory, _, _ = self.compute_GQA_memory_size(self.config.model_config, attn_bs)
-            attn_memory = kv_size * self.config.micro_batch_num + attn_static_memory
+            
+            # Fix: Include activation memory in total memory calculation
+            activation_memory = self.compute_activation_memory(
+                self.config.model_config, 
+                attn_bs, 
+                self.config.seq_len
+            )
+            attn_memory = (
+                kv_size * self.config.micro_batch_num + 
+                attn_static_memory + 
+                activation_memory
+            )
 
             if attn_time > attn_latency_constraint or attn_memory > self.config.aichip_config.aichip_memory * BYTE_2_GB * MEMORY_THRESHOLD_RATIO:
                 attn_bs_max = attn_bs
@@ -95,6 +106,13 @@ class AfdSearch(BaseSearch):
             kv_size, attn_static_memory, mlp_static_memory, per_router_expert_memory = self.compute_MLA_memory_size(self.config.model_config, attn_bs)
         elif get_attention_family(self.config.model_type) == "GQA":
             kv_size, attn_static_memory, mlp_static_memory, per_router_expert_memory = self.compute_GQA_memory_size(self.config.model_config, attn_bs)
+
+        # Fix: Include activation memory in total memory calculation
+        activation_memory = self.compute_activation_memory(
+            self.config.model_config, 
+            attn_bs, 
+            self.config.seq_len
+        )
 
         # compute per dense layer time
         if self.config.model_config.num_layers > self.config.model_config.num_moe_layers:
@@ -163,22 +181,23 @@ class AfdSearch(BaseSearch):
                     f"commu_time: {commu_time:.2f}us, e2e_time: {e2e_time:.2f}ms, "
                     f"e2e_time_per_dense_layer: {e2e_time_per_dense_layer:.2f}us, "
                     f"e2e_time_per_moe_layer: {e2e_time_per_moe_layer:.2f}us, throughput: {throughput:.2f} tokens/die/s, "
-                    f"kv_size:{kv_size} GB, attn_static_memory:{attn_static_memory} GB, "
-                    f"mlp_static_memory:{mlp_static_memory} GB, ffn_static_memory:{ffn_static_memory} GB"
+                    f"kv_size:{kv_size:.2f} GB, attn_static_memory:{attn_static_memory:.2f} GB, "
+                    f"mlp_static_memory:{mlp_static_memory:.2f} GB, ffn_static_memory:{ffn_static_memory:.2f} GB, "
+                    f"activation_memory:{activation_memory:.2f} GB"
                 )
 
                 self.perf_afd_results.append([
                     attn_bs, self.config.ffn_bs, self.config.kv_len, attn_die, ffn_die, total_die,
                     attn_time, moe_time, dispatch_time, combine_time, commu_time, e2e_time / MS_2_US,
                     e2e_time_per_dense_layer, e2e_time_per_moe_layer, throughput,
-                    kv_size, attn_static_memory, mlp_static_memory, ffn_static_memory
+                    kv_size, attn_static_memory, mlp_static_memory, ffn_static_memory, activation_memory
                 ])
 
         columns = [
             'attn_bs', 'ffn_bs', 'kv_len', 'attn_die', 'ffn_die', 'total_die',
             'attn_time(us)', 'moe_time(us)', 'dispatch_time(us)', 'combine_time(us)', 'commu_time(us)', 'e2e_time(ms)',
             'e2e_time_per_dense_layer(us)', 'e2e_time_per_moe_layer(us)', 'throughput(tokens/die/s)',
-            'kv_size(GB)', 'attn_static_memory(GB)', 'mlp_static_memory(GB)', 'ffn_static_memory(GB)'
+            'kv_size(GB)', 'attn_static_memory(GB)', 'mlp_static_memory(GB)', 'ffn_static_memory(GB)', 'activation_memory(GB)'
         ]
         df = pd.DataFrame(self.perf_afd_results, columns=columns)
 
