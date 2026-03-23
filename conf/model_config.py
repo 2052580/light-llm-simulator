@@ -40,6 +40,8 @@ class ModelType(Enum):
     QWEN3_235B = "Qwen/Qwen3-235B-A22B"
     DEEPSEEK_V2_LITE = "deepseek-ai/DeepSeek-V2-Lite"
     QWEN3_5_397B = "Qwen/Qwen3.5-397B-A17B"
+    QWEN3_5_35B = "Qwen/Qwen3.5-35B-A3B"
+    QWEN3_5_122B = "Qwen/Qwen3.5-122B-A10B"
 
 
 @dataclass
@@ -159,6 +161,22 @@ class ModelConfig:
                 num_layers=60, num_moe_layers=60, head_size=128, vocab_size=248320,
                 linear_num_key_heads=16, linear_key_head_dim=128,
                 linear_num_value_heads=64, linear_value_head_dim=128,
+                full_attention_interval=4),
+            ModelType.QWEN3_5_122B: cfg(
+                model_size_b=122, hidden_size=3072, max_kv_length=262144, intermediate_size=0,
+                max_position_embeddings=262144, moe_intermediate_size=1024, n_routed_experts=256,
+                n_shared_experts=1, num_heads=32, kv_heads=2, num_experts_per_tok=8,
+                num_layers=48, num_moe_layers=48, head_size=256, vocab_size=248320,
+                linear_num_key_heads=16, linear_key_head_dim=128,
+                linear_num_value_heads=64, linear_value_head_dim=128,
+                full_attention_interval=4),
+            ModelType.QWEN3_5_35B: cfg(
+                model_size_b=35, hidden_size=2048, max_kv_length=262144, intermediate_size=0,
+                max_position_embeddings=262144, moe_intermediate_size=512, n_routed_experts=256,
+                n_shared_experts=1, num_heads=16, kv_heads=2, num_experts_per_tok=8,
+                num_layers=40, num_moe_layers=40, head_size=128, vocab_size=248320,
+                linear_num_key_heads=16, linear_key_head_dim=128,
+                linear_num_value_heads=32, linear_value_head_dim=128,
                 full_attention_interval=4)
         }
 

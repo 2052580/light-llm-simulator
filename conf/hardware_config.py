@@ -11,6 +11,7 @@ class DeviceType(Enum):
     ASCEND910B3 = "Ascend_910b3"
     ASCEND910B4 = "Ascend_910b4"
     ASCENDA3_Pod = "Ascend_A3Pod"
+    ASCEND950PR_Pod = "Ascend_950PR_Pod"
     ASCENDDAVID121 = "Ascend_David121"
     ASCENDDAVID120 = "Ascend_David120"
     NvidiaA100SXM = "Nvidia_A100_SXM"
@@ -107,6 +108,12 @@ class HWConf:
                 num_dies_per_node=16, aichip_memory=64 * GB_2_BYTE, cube_flops_fp16=353.8 * TB_2_BYTE,
                 cube_flops_int8=707.9 * TB_2_BYTE, vector_flops_fp16=22 * TB_2_BYTE,
                 vector_flops_int8=44 * TB_2_BYTE, intra_node_bandwidth=196 * GB_2_BYTE,
+                inter_node_bandwidth=50 * GB_2_BYTE, local_memory_bandwidth=1.6 * TB_2_BYTE,
+                bwsio_memory_bandwidth = 224 * GB_2_BYTE, onchip_buffer_size=192 * MB_2_BYTE),
+            DeviceType.ASCEND950PR_Pod: cfg(
+                num_dies_per_node=16, aichip_memory=64 * GB_2_BYTE, cube_flops_fp16=378 * TB_2_BYTE,
+                cube_flops_int8=756 * TB_2_BYTE, vector_flops_fp16=47 * TB_2_BYTE,
+                vector_flops_int8=44 * TB_2_BYTE, intra_node_bandwidth=128 * GB_2_BYTE,
                 inter_node_bandwidth=50 * GB_2_BYTE, local_memory_bandwidth=1.6 * TB_2_BYTE,
                 bwsio_memory_bandwidth = 224 * GB_2_BYTE, onchip_buffer_size=192 * MB_2_BYTE),
             DeviceType.ASCENDDAVID121: cfg(

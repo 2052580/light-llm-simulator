@@ -48,7 +48,7 @@ def get_model(
         mlp = DeepSeekV2LiteDecodeMLP(config)
         moe = DeepSeekV2LiteDecodeMoe(config)
         model = {"attn": attn, "mlp": mlp, "moe": moe}
-    if config.model_type == ModelType.QWEN3_5_397B:
+    if config.model_type in [ModelType.QWEN3_5_397B, ModelType.QWEN3_5_35B, ModelType.QWEN3_5_122B]:
         attn = Qwen35DecodeAttn(config)
         moe = Qwen35DecodeMoe(config)
         model = {"attn": attn, "moe": moe}
@@ -68,5 +68,5 @@ def get_attention_family(
     assert(model_type in ModelType), f"unsupport model {model_type}"
     if model_type == ModelType.DEEPSEEK_V3 or model_type == ModelType.DEEPSEEK_V2_LITE:
         return "MLA"
-    if model_type == ModelType.QWEN3_235B or model_type == ModelType.QWEN3_5_397B:
+    if model_type in [ModelType.QWEN3_235B, ModelType.QWEN3_5_397B, ModelType.QWEN3_5_35B, ModelType.QWEN3_5_122B]:
         return "GQA"
