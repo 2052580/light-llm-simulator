@@ -155,7 +155,7 @@ class ModelConfig:
             ModelType.QWEN3_5_397B: cfg(
                 model_size_b=397, hidden_size=4096, max_kv_length=262144, intermediate_size=0,
                 max_position_embeddings=262144, moe_intermediate_size=1024, n_routed_experts=512,
-                n_shared_experts=0, num_heads=32, kv_heads=2, num_experts_per_tok=10,
+                n_shared_experts=1, num_heads=32, kv_heads=2, num_experts_per_tok=10,
                 num_layers=60, num_moe_layers=60, head_size=128, vocab_size=248320,
                 linear_num_key_heads=16, linear_key_head_dim=128,
                 linear_num_value_heads=64, linear_value_head_dim=128,

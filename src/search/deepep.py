@@ -124,7 +124,7 @@ class DeepEpSearch(BaseSearch):
 
             self.perf_deepep_results.append([
                 attn_bs, ffn_bs, self.config.kv_len, total_die,
-                attn_time, moe_time, dispatch_time, combine_time, commu_time, e2e_time,
+                attn_time, moe_time, commu_time, dispatch_time, combine_time, e2e_time,
                 e2e_time_per_dense_layer, e2e_time_per_moe_layer, throughput,
                 kv_size, attn_static_memory, mlp_static_memory, ffn_static_memory
             ])

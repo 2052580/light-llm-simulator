@@ -106,15 +106,21 @@ def main():
     args = parser.parse_args()
     run_search(args)
 
+    if args.serving_mode == "DeepEP":
+        micro_batch_num = [1]
+    else:
+        micro_batch_num = args.micro_batch_num
+
     import subprocess
     throughput_cmd = [
         "python", "src/visualization/throughput.py",
+        "--serving_mode", args.serving_mode,
         "--model_type", args.model_type,
         "--device_type", args.device_type,
         "--min_die", str(args.min_die),
         "--max_die", str(args.max_die),
     ]
-    throughput_cmd.extend(["--micro_batch_num", "2", "3"])
+    throughput_cmd.extend(["--micro_batch_num"] + [str(m) for m in micro_batch_num])
     throughput_cmd.extend(["--tpot_list"] + [str(t) for t in args.tpot])
     throughput_cmd.extend(["--kv_len_list"] + [str(k) for k in args.kv_len])
     throughput_cmd.extend(["--total_die"] + [str(t) for t in range(args.min_die, args.max_die + 1, args.die_step)])
