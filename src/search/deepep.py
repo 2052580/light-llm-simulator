@@ -119,21 +119,22 @@ class DeepEpSearch(BaseSearch):
                 f"e2e_time:{e2e_time} ms, throughput:{throughput} tokens/die/s, "
                 f"e2e_time_per_dense_layer:{e2e_time_per_dense_layer} us, e2e_time_per_moe_layer:{e2e_time_per_moe_layer} us, "
                 f"kv_size:{kv_size} GB, attn_static_memory:{attn_static_memory} GB, "
-                f"mlp_static_memory:{mlp_static_memory} GB, ffn_static_memory:{ffn_static_memory} GB"
+                f"mlp_static_memory:{mlp_static_memory} GB, ffn_static_memory:{ffn_static_memory} GB, "
+                f"total_memory:{total_memory} GB"
             )
 
             self.perf_deepep_results.append([
                 attn_bs, ffn_bs, self.config.kv_len, total_die,
                 attn_time, moe_time, commu_time, dispatch_time, combine_time, e2e_time,
                 e2e_time_per_dense_layer, e2e_time_per_moe_layer, throughput,
-                kv_size, attn_static_memory, mlp_static_memory, ffn_static_memory
+                kv_size, attn_static_memory, mlp_static_memory, ffn_static_memory, total_memory
             ])
 
         columns = [
             'attn_bs', 'ffn_bs', 'kv_len', 'total_die', 'attn_time(us)', 
             'moe_time(us)', 'commu_time(us)', 'dispatch_time(us)', 'combine_time(us)', 'e2e_time(ms)',
             'e2e_time_per_dense_layer(us)', 'e2e_time_per_moe_layer(us)', 'throughput(tokens/die/s)',
-            'kv_size(GB)', 'attn_static_memory(GB)', 'mlp_static_memory(GB)', 'ffn_static_memory(GB)'
+            'kv_size(GB)', 'attn_static_memory(GB)', 'mlp_static_memory(GB)', 'ffn_static_memory(GB)', 'total_memory(GB)'
         ]
         df = pd.DataFrame(self.perf_deepep_results, columns=columns)
         result_dir = f"data/deepep/"

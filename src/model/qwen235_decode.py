@@ -70,7 +70,7 @@ class Qwen235DecodeAttn(BaseModule):
             self.bs,
             self.model_config.num_heads,
             self.config.seq_len,
-            self.model_config.hidden_size,
+            self.model_config.head_size,
             self.aichip_config
         )
         self.key_rope = OpRotary(
@@ -78,7 +78,7 @@ class Qwen235DecodeAttn(BaseModule):
             self.bs,
             self.model_config.kv_heads,
             self.config.seq_len,
-            self.model_config.hidden_size,
+            self.model_config.head_size,
             self.aichip_config
         )
         # page attention

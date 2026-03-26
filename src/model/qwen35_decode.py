@@ -1,4 +1,5 @@
 import logging
+from conf.common import MAX_AVG_RATIO
 from conf.config import Config
 from src.model.base import BaseModule
 from src.ops import (
@@ -119,10 +120,18 @@ class Qwen35DecodeAttn(BaseModule):
             self.bmm_o_proj.memory_time +
             self.norm.memory_time
         )
+
         logging.info(
             f"Attention Module - attn_bs: {self.config.attn_bs}, "
+            f"query_states: {self.query_states.e2e_time * 1e6:.2f}us, "
+            f"key_states: {self.key_states.e2e_time * 1e6:.2f}us, "
+            f"value_states: {self.value_states.e2e_time * 1e6:.2f}us, "
+            f"query_rope: {self.query_rope.e2e_time * 1e6:.2f}us, "
+            f"key_rope: {self.key_rope.e2e_time * 1e6:.2f}us, "
             f"full_attn: {self.full_attn.e2e_time * 1e6:.2f}us, "
-            f"linear_attn: {self.linear_attn.e2e_time * 1e6:.2f}us"
+            f"linear_attn: {self.linear_attn.e2e_time * 1e6:.2f}us, "
+            f"bmm_o_proj: {self.bmm_o_proj.e2e_time * 1e6:.2f}us, "
+            f"norm: {self.norm.e2e_time * 1e6: .2f}us"
         )
 
 
@@ -167,13 +176,31 @@ class Qwen35DecodeMoe(BaseModule):
 
     def _aggregate_times(self):
         self.dispatch_time = self.dispatch.e2e_time
-        self.e2e_time = self.moe_up.e2e_time + self.moe_swiglu.e2e_time + self.moe_down.e2e_time
-        self.compute_time = self.moe_up.compute_time + self.moe_swiglu.compute_time + self.moe_down.compute_time
-        self.memory_time = self.moe_up.memory_time + self.moe_swiglu.memory_time + self.moe_down.memory_time
+        self.e2e_time = (
+            self.moe_up.e2e_time * MAX_AVG_RATIO +
+            self.moe_swiglu.e2e_time +
+            self.moe_down.e2e_time * MAX_AVG_RATIO
+        )
+        self.compute_time = (
+            self.moe_up.compute_time * MAX_AVG_RATIO +
+            self.moe_swiglu.compute_time +
+            self.moe_down.compute_time * MAX_AVG_RATIO
+        )
+        self.memory_time = (
+            self.moe_up.memory_time * MAX_AVG_RATIO +
+            self.moe_swiglu.memory_time +
+            self.moe_down.memory_time * MAX_AVG_RATIO
+        )
         self.combine_time = self.combine.e2e_time
+
         self.commu_time = self.dispatch_time + self.combine_time
+
         logging.info(
             f"MoE Module - ffn_bs: {self.config.ffn_bs}, "
+            f"moe_up: {self.moe_up.e2e_time * 1e6:.2f}us, "
+            f"moe_swiglu: {self.moe_swiglu.e2e_time * 1e6:.2f}us, "
+            f"moe_down: {self.moe_down.e2e_time * 1e6:.2f}us, "
             f"dispatch_time: {self.dispatch_time * 1e6:.2f}us, "
-            f"combine_time: {self.combine_time * 1e6:.2f}us"
+            f"combine_time: {self.combine_time * 1e6:.2f}us, "
+            f"commu_time: {self.commu_time * 1e6:.2f}us"
         )
