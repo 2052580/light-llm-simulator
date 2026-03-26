@@ -1,7 +1,9 @@
 from conf.model_config import ModelConfig, ModelType
 from conf.hardware_config import HWConf, DeviceType
 from conf.common import MIN_ROUTED_EXPERT_PER_DIE
+from conf.network_topology_config import NetworkTopologyConfig
 import math
+from typing import Optional
 
 
 class Config:
@@ -21,7 +23,8 @@ class Config:
         next_n: int,
         multi_token_ratio: float,
         attn_tensor_parallel: int,
-        ffn_tensor_parallel: int
+        ffn_tensor_parallel: int,
+        topology: Optional[str] = None,
     ) -> None:
         """
         Initialize a Config object.
@@ -52,6 +55,8 @@ class Config:
         self.model_config = ModelConfig.create_model_config(model_type)
         self.device_type = DeviceType(device_type)
         self.aichip_config = HWConf.create(self.device_type)
+        self.topology = topology or "none"
+        self.topology_config = NetworkTopologyConfig.from_preset(self.topology)
         self.min_attn_bs = min_attn_bs
         self.max_attn_bs = max_attn_bs
         self.min_die = min_die

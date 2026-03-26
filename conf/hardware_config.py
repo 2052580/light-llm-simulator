@@ -10,7 +10,7 @@ class DeviceType(Enum):
     ASCEND910B2 = "Ascend_910b2"
     ASCEND910B3 = "Ascend_910b3"
     ASCEND910B4 = "Ascend_910b4"
-    ASCENDA3_Pod = "Ascend_A3Pod"
+    ASCENDA3_Pod = "Ascend_A3_Pod"
     ASCEND950PR_Pod = "Ascend_950PR_Pod"
     ASCENDDAVID121 = "Ascend_David121"
     ASCENDDAVID120 = "Ascend_David120"
@@ -60,6 +60,8 @@ class HWConf:
     cube_flops_int8: float
     vector_flops_fp16: float
     vector_flops_int8: float
+    compute_kernel_launch_overhead_us: float = 2.0
+    comm_kernel_launch_overhead_us: float = 7.0
 
     @classmethod
     def create(cls, device_type: DeviceType) -> 'HWConf':

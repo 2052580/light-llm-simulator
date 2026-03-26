@@ -45,6 +45,7 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--multi_token_ratio', type=float, default=0.7)
     parser.add_argument('--attn_tensor_parallel', type=int, default=1)
     parser.add_argument('--ffn_tensor_parallel', type=int, default=1)
+    parser.add_argument('--topology', type=str, default="none")
 
 def run_search(args):
     """
@@ -71,7 +72,8 @@ def run_search(args):
                         next_n=args.next_n,
                         multi_token_ratio=args.multi_token_ratio,
                         attn_tensor_parallel=args.attn_tensor_parallel,
-                        ffn_tensor_parallel=args.ffn_tensor_parallel
+                        ffn_tensor_parallel=args.ffn_tensor_parallel,
+                        topology=args.topology,
                     )
                     afd_search = AfdSearch(config)
                     afd_search.deployment()
@@ -93,7 +95,8 @@ def run_search(args):
                     next_n=args.next_n,
                     multi_token_ratio=args.multi_token_ratio,
                     attn_tensor_parallel=args.attn_tensor_parallel,
-                    ffn_tensor_parallel=args.ffn_tensor_parallel
+                    ffn_tensor_parallel=args.ffn_tensor_parallel,
+                    topology=args.topology,
                 )
                 deepep_search = DeepEpSearch(config)
                 deepep_search.deployment()

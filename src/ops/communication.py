@@ -1,4 +1,5 @@
 from src.ops.base import BaseOp
+from conf.common import US_2_SEC
 
 class Dispatch(BaseOp):
     '''
@@ -35,7 +36,21 @@ class Dispatch(BaseOp):
                 self.config.attn_die /
                 self.config.ffn_die
             )
-        self.memory_time = dispatch_packet / self.inter_node_bandwidth
+        group_size = int(self.config.ffn_die)
+        if hasattr(self.config, "topology_config") and self.config.topology_config is not None and self.config.topology_config.topology_type != "none":
+            bytes_per_device = float(dispatch_packet)
+            effective_bytes = self.config.topology_config.get_all2all_effective_bytes(
+                bytes_per_device,
+                group_size=group_size,
+            )
+            bw = float(self.config.topology_config.get_effective_bandwidth(comm_type="all2all", group_size=group_size))
+            bw *= float(self.op_memory_disc())
+            if bw > 0:
+                self.memory_time = effective_bytes / bw + float(self.config.topology_config.comm_kernel_launch_overhead_us) * US_2_SEC
+            else:
+                self.memory_time = float("inf")
+        else:
+            self.memory_time = dispatch_packet / self.inter_node_bandwidth
         return self.memory_time
 
 class Combine(BaseOp):
@@ -73,5 +88,19 @@ class Combine(BaseOp):
                 self.config.attn_die /
                 self.config.ffn_die
             )
-        self.memory_time = combine_packet / self.inter_node_bandwidth
+        group_size = int(self.config.ffn_die)
+        if hasattr(self.config, "topology_config") and self.config.topology_config is not None and self.config.topology_config.topology_type != "none":
+            bytes_per_device = float(combine_packet)
+            effective_bytes = self.config.topology_config.get_all2all_effective_bytes(
+                bytes_per_device,
+                group_size=group_size,
+            )
+            bw = float(self.config.topology_config.get_effective_bandwidth(comm_type="all2all", group_size=group_size))
+            bw *= float(self.op_memory_disc())
+            if bw > 0:
+                self.memory_time = effective_bytes / bw + float(self.config.topology_config.comm_kernel_launch_overhead_us) * US_2_SEC
+            else:
+                self.memory_time = float("inf")
+        else:
+            self.memory_time = combine_packet / self.inter_node_bandwidth
         return self.memory_time

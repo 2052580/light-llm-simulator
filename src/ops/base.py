@@ -1,6 +1,6 @@
 from abc import ABC
 from conf.hardware_config import HWConf
-from conf.common import SEC_2_US
+from conf.common import SEC_2_US, US_2_SEC
 import logging
 
 class BaseOp(ABC):
@@ -105,7 +105,7 @@ class BaseOp(ABC):
         Returns:
             The end-to-end time of the operator.
         """
-        self.e2e_time = max(self.memory_time, self.compute_time)
+        self.e2e_time = max(self.memory_time, self.compute_time) + self.launch_overhead_us() * US_2_SEC
         logging.info(
             f"name: {self.name}, "
             f"compute_time: {self.compute_time * SEC_2_US:.2f} us, "
@@ -113,3 +113,6 @@ class BaseOp(ABC):
             f"e2e_time: {self.e2e_time * SEC_2_US:.2f} us"
         )
         return self.e2e_time
+
+    def launch_overhead_us(self) -> float:
+        return float(getattr(self.aichip_config, "compute_kernel_launch_overhead_us", 0.0))
